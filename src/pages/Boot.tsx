@@ -34,7 +34,7 @@ const Boot = () => {
     }, 50);
 
     const redirectTimeout = setTimeout(() => {
-      navigate("/auth");
+      navigate("/system-ready");
     }, 4000);
 
     return () => {
