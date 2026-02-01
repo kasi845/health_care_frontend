@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import HealthCore from "@/components/HealthCore";
 import FloatingSymptomPanel from "@/components/FloatingSymptomPanel";
@@ -9,7 +11,13 @@ import RecommendationsSection from "@/components/RecommendationsSection";
 import AIOrbChat from "@/components/AIOrbChat";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [healthScore] = useState(58);
+
+  const handleLogout = () => {
+    // Clear any session data here if needed
+    navigate("/system-ready");
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
@@ -19,16 +27,43 @@ const Home = () => {
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center px-4 py-8 md:py-12">
         {/* Header */}
-        <header className="text-center mb-10">
-          <h1 
-            className="font-display text-2xl md:text-3xl text-primary tracking-[0.2em] mb-2"
-            style={{ textShadow: '0 0 20px hsl(var(--primary) / 0.5)' }}
-          >
-            AI HEALTH COMMAND CENTER
-          </h1>
-          <p className="text-muted-foreground text-sm tracking-wider">
-            Advanced biometric analysis system
-          </p>
+        <header className="w-full max-w-6xl mb-10">
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <h1 
+                className="font-display text-2xl md:text-3xl text-primary tracking-[0.2em] mb-2"
+                style={{ textShadow: '0 0 20px hsl(var(--primary) / 0.5)' }}
+              >
+                AI HEALTH COMMAND CENTER
+              </h1>
+              <p className="text-muted-foreground text-sm tracking-wider">
+                Advanced biometric analysis system
+              </p>
+            </div>
+            
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="absolute right-4 top-8 md:relative md:right-auto md:top-auto flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 bg-primary/5 backdrop-blur-sm transition-all duration-300 hover:border-primary/60 hover:bg-primary/10"
+              style={{
+                boxShadow: '0 0 15px hsl(190 100% 50% / 0.1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 25px hsl(190 100% 50% / 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 15px hsl(190 100% 50% / 0.1)';
+              }}
+            >
+              <LogOut className="w-4 h-4 text-primary" />
+              <span 
+                className="font-display text-xs tracking-[0.15em] text-primary hidden md:inline"
+                style={{ textShadow: '0 0 8px hsl(var(--primary) / 0.4)' }}
+              >
+                LOG OUT
+              </span>
+            </button>
+          </div>
         </header>
 
         {/* Main dashboard area */}
