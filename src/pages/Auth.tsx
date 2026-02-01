@@ -1,15 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, Lock, User, ArrowRight, Fingerprint } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+
+  // Check if mode was passed from SystemReady page
+  useEffect(() => {
+    if (location.state?.mode === "signup") {
+      setIsLogin(false);
+    } else {
+      setIsLogin(true);
+    }
+  }, [location.state]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +48,10 @@ const Auth = () => {
             className="font-display text-2xl md:text-3xl text-primary tracking-[0.2em] mb-2"
             style={{ textShadow: '0 0 20px hsl(var(--primary) / 0.5)' }}
           >
-            {isLogin ? "SYSTEM ACCESS" : "CREATE PROFILE"}
+            SYSTEM ACCESS
           </h1>
           <p className="text-muted-foreground text-sm tracking-wider">
-            {isLogin ? "Authenticate to continue" : "Initialize your health profile"}
+            Authenticate to continue
           </p>
         </div>
 
@@ -86,7 +96,7 @@ const Auth = () => {
             type="submit"
             className="w-full h-12 rounded-xl font-display tracking-wider text-base bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity glow-primary"
           >
-            {isLogin ? "AUTHENTICATE" : "INITIALIZE"}
+            {isLogin ? "AUTHENTICATE" : "CREATE PROFILE"}
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
 
@@ -99,7 +109,7 @@ const Auth = () => {
                 onClick={() => setIsLogin(!isLogin)}
                 className="ml-2 text-primary hover:text-primary/80 transition-colors font-display tracking-wider"
               >
-                {isLogin ? "CREATE ONE" : "LOGIN"}
+                {isLogin ? "SIGN UP" : "LOGIN"}
               </button>
             </p>
           </div>
