@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Bot, User, Sparkles } from "lucide-react";
+import { X, Send, Bot, User, MessageCircle } from "lucide-react";
+import { sendChatbotMessage, type ChatbotMessage } from "@/lib/api";
 
 interface Message {
   id: number;
@@ -10,17 +11,10 @@ interface Message {
 const initialMessages: Message[] = [
   {
     id: 1,
-    text: "Greetings. I am your AI Health Analyst. How may I assist with your health data interpretation?",
+    text: "Hello! I'm your AI Health Assistant. I can help answer your medical and health-related questions. How can I assist you today?",
     sender: "ai",
   },
 ];
-
-const aiResponses: Record<string, string> = {
-  "risk": "Your elevated risk stems from three key biomarkers: glucose at 142 mg/dL exceeds the 70-100 normal range, blood pressure at 130/85 indicates stage 1 hypertension, and BMI of 27.3 suggests overweight status. Lifestyle modifications can significantly improve these metrics.",
-  "glucose": "Your glucose reading of 142 mg/dL indicates pre-diabetic levels. Optimal fasting glucose is 70-100 mg/dL. I recommend reducing refined carbohydrate intake and increasing daily physical activity.",
-  "heart": "Cardiac risk at 42% is moderate. Primary factors: elevated blood pressure and cholesterol markers. Regular cardiovascular exercise and sodium reduction are recommended interventions.",
-  "default": "I can analyze specific aspects of your health data. Ask about glucose levels, cardiac risk, or why your overall risk score is elevated.",
-};
 
 const AIOrbChat = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,27 +31,47 @@ const AIOrbChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getResponse = (message: string): string => {
-    const lower = message.toLowerCase();
-    for (const [key, response] of Object.entries(aiResponses)) {
-      if (key !== "default" && lower.includes(key)) return response;
-    }
-    return aiResponses.default;
-  };
-
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMsg: Message = { id: Date.now(), text: input, sender: "user" };
     setMessages((prev) => [...prev, userMsg]);
+    const userMessage = input;
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      const aiMsg: Message = { id: Date.now() + 1, text: getResponse(input), sender: "ai" };
+    try {
+      // Build conversation history for context
+      const conversationHistory: ChatbotMessage[] = messages
+        .filter(msg => msg.id !== 1) // Exclude initial greeting
+        .map(msg => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.text
+        }));
+
+      // Call the chatbot API
+      const response = await sendChatbotMessage({
+        message: userMessage,
+        conversation_history: conversationHistory
+      });
+
+      const aiMsg: Message = { 
+        id: Date.now() + 1, 
+        text: response.message, 
+        sender: "ai" 
+      };
       setMessages((prev) => [...prev, aiMsg]);
+    } catch (error: any) {
+      console.error("Chatbot error:", error);
+      const errorMsg: Message = { 
+        id: Date.now() + 1, 
+        text: error.message || "Sorry, I encountered an error. Please try again.", 
+        sender: "ai" 
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -65,7 +79,7 @@ const AIOrbChat = () => {
       {/* Floating Orb */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ${isOpen ? 'opacity-0 pointer-events-none scale-50' : 'opacity-100'}`}
+        className={`fixed bottom-24 right-8 z-40 transition-all duration-500 ${isOpen ? 'opacity-0 pointer-events-none scale-50' : 'opacity-100'}`}
       >
         <div className="relative">
           {/* Outer glow rings */}
@@ -74,18 +88,18 @@ const AIOrbChat = () => {
           
           {/* Main orb */}
           <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-orb-pulse cursor-pointer hover:scale-110 transition-transform">
-            <Sparkles className="w-7 h-7 text-primary-foreground" />
+            <MessageCircle className="w-7 h-7 text-primary-foreground" />
           </div>
           
           {/* Label */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            <span className="font-display text-xs text-primary/80 tracking-widest">AI ASSISTANT</span>
+          <div className="absolute -bottom-8 right-0 whitespace-nowrap">
+            <span className="font-display text-xs text-primary/80 tracking-widest">Chatbot</span>
           </div>
         </div>
       </button>
 
       {/* Chat Modal */}
-      <div className={`fixed inset-x-4 bottom-4 sm:inset-auto sm:bottom-8 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md z-50 transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+      <div className={`fixed inset-x-4 bottom-4 sm:inset-auto sm:bottom-24 sm:right-8 sm:left-auto sm:w-full sm:max-w-md z-50 transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
         <div className="glass-panel border border-primary/40 overflow-hidden flex flex-col max-h-[70vh]">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-primary/20 bg-card/50">
@@ -94,7 +108,7 @@ const AIOrbChat = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="font-display text-sm text-primary tracking-wider">AI HEALTH ANALYST</h3>
+                <h3 className="font-display text-sm text-primary tracking-wider">Chatbot</h3>
                 <p className="text-xs text-success flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                   Online

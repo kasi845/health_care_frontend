@@ -2,25 +2,29 @@ import { useState } from "react";
 import { Lightbulb, Leaf, Pill, ChevronDown, AlertTriangle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-const suggestions = [
+const defaultSuggestions = [
   "Reduce sugar intake to manage glucose levels",
   "Daily 30-minute walking or light exercise",
   "Regular blood pressure monitoring",
   "Maintain consistent sleep schedule",
 ];
 
-const homeRemedies = [
+const defaultHomeRemedies = [
   "Warm water with lemon in the morning",
   "Balanced diet with leafy greens",
   "Adequate sleep (7-8 hours)",
   "Stress management through meditation",
 ];
 
-const tablets = [
-  { name: "Paracetamol", category: "Fever/Pain relief" },
-  { name: "Antacid", category: "Digestive health" },
-  { name: "Antihistamine", category: "Allergy management" },
+const defaultMedicineCategories = [
+  { category: "Antipyretic medicines", description: "Commonly used for fever or pain management" },
+  { category: "Antacid medicines", description: "Commonly used for digestive health" },
+  { category: "Antihistamine medicines", description: "Commonly used for allergy management" },
 ];
+
+interface RecommendationsSectionProps {
+  healthData?: any;
+}
 
 interface PanelProps {
   title: string;
@@ -57,14 +61,28 @@ const RecommendationPanel = ({ title, icon, children, defaultOpen = false }: Pan
   );
 };
 
-const RecommendationsSection = () => {
+const RecommendationsSection = ({ healthData }: RecommendationsSectionProps) => {
+  // Only show data if healthData exists - no default data for new users
+  if (!healthData) {
+    return null;
+  }
+  
+  const suggestions = healthData.suggestions || [];
+  const homeRemedies = healthData.home_remedies || [];
+  const medicineCategories = healthData.medicine_categories || [];
+  
+  // Don't render if all sections are empty
+  if (suggestions.length === 0 && homeRemedies.length === 0 && medicineCategories.length === 0) {
+    return null;
+  }
+
   return (
     <div className="w-full space-y-4">
       {/* Section header */}
       <div className="flex items-center justify-center gap-4 mb-6">
         <div className="h-px flex-1 max-w-20 bg-gradient-to-r from-transparent to-primary/50" />
         <h2 className="font-display text-lg text-primary tracking-widest neon-text">
-          RECOMMENDATIONS
+          CARE GUIDANCE
         </h2>
         <div className="h-px flex-1 max-w-20 bg-gradient-to-l from-transparent to-primary/50" />
       </div>
@@ -77,7 +95,7 @@ const RecommendationsSection = () => {
           defaultOpen={true}
         >
           <ul className="space-y-2">
-            {suggestions.map((item, index) => (
+            {suggestions.map((item: string, index: number) => (
               <li 
                 key={index}
                 className="flex items-start gap-3 text-sm text-foreground/80"
@@ -94,7 +112,7 @@ const RecommendationsSection = () => {
           icon={<Leaf className="w-5 h-5 text-accent" />}
         >
           <ul className="space-y-2">
-            {homeRemedies.map((item, index) => (
+            {homeRemedies.map((item: string, index: number) => (
               <li 
                 key={index}
                 className="flex items-start gap-3 text-sm text-foreground/80"
@@ -107,17 +125,17 @@ const RecommendationsSection = () => {
         </RecommendationPanel>
 
         <RecommendationPanel 
-          title="PRIMARY TABLETS (ADVISORY)" 
+          title="PRIMARY MEDICINE CATEGORIES (ADVISORY)" 
           icon={<Pill className="w-5 h-5 text-primary" />}
         >
           <div className="space-y-3">
-            {tablets.map((item, index) => (
+            {medicineCategories.map((item: any, index: number) => (
               <div 
                 key={index}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-primary/10"
+                className="p-3 rounded-lg bg-muted/20 border border-primary/10"
               >
-                <span className="text-sm text-foreground">{item.name}</span>
-                <span className="text-xs text-muted-foreground">{item.category}</span>
+                <span className="text-sm text-foreground font-medium">{item.category}</span>
+                <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
               </div>
             ))}
             
@@ -125,7 +143,7 @@ const RecommendationsSection = () => {
             <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 mt-4">
               <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
               <p className="text-xs text-warning/80">
-                Consult a doctor before taking any medication. These are general categories for advisory purposes only.
+                Always follow your doctor's prescription. These are general medicine categories for informational purposes only.
               </p>
             </div>
           </div>

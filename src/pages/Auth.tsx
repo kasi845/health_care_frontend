@@ -2,15 +2,21 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, ArrowRight, Fingerprint } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Fingerprint, Phone, Loader2, AlertCircle } from "lucide-react";
+import { signup, login } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Check if mode was passed from SystemReady page
   useEffect(() => {
@@ -21,10 +27,60 @@ const Auth = () => {
     }
   }, [location.state]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to home after "auth"
-    navigate("/home");
+    setError("");
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        // Login
+        if (!email || !password) {
+          setError("Please fill in all fields");
+          setLoading(false);
+          return;
+        }
+        await login({ email, password });
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      } else {
+        // Signup
+        if (!email || !password || !name) {
+          setError("Please fill in all required fields");
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters");
+          setLoading(false);
+          return;
+        }
+        await signup({ 
+          email, 
+          password, 
+          full_name: name,
+          phone: phone || undefined 
+        });
+        toast({
+          title: "Account created",
+          description: "Welcome! Your account has been created successfully.",
+        });
+      }
+      
+      // Navigate to home after successful auth
+      navigate("/home");
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.");
+      toast({
+        title: "Authentication failed",
+        description: err.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,6 +113,14 @@ const Auth = () => {
 
         {/* Auth form */}
         <form onSubmit={handleSubmit} className="glass-panel p-8 space-y-6">
+          {/* Error message */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>{error}</span>
+            </div>
+          )}
+
           {!isLogin && (
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60" />
@@ -65,6 +129,8 @@ const Auth = () => {
                 placeholder="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required={!isLogin}
+                disabled={loading}
                 className="pl-12 h-12 bg-muted/30 border-primary/20 focus:border-primary/50 rounded-xl font-display tracking-wider text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -77,9 +143,25 @@ const Auth = () => {
               placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
               className="pl-12 h-12 bg-muted/30 border-primary/20 focus:border-primary/50 rounded-xl font-display tracking-wider text-foreground placeholder:text-muted-foreground"
             />
           </div>
+
+          {!isLogin && (
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60" />
+              <Input
+                type="tel"
+                placeholder="Phone Number (Optional)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={loading}
+                className="pl-12 h-12 bg-muted/30 border-primary/20 focus:border-primary/50 rounded-xl font-display tracking-wider text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+          )}
 
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60" />
@@ -88,16 +170,29 @@ const Auth = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              minLength={6}
               className="pl-12 h-12 bg-muted/30 border-primary/20 focus:border-primary/50 rounded-xl font-display tracking-wider text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full h-12 rounded-xl font-display tracking-wider text-base bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity glow-primary"
+            disabled={loading}
+            className="w-full h-12 rounded-xl font-display tracking-wider text-base bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLogin ? "AUTHENTICATE" : "CREATE PROFILE"}
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {isLogin ? "AUTHENTICATING..." : "CREATING..."}
+              </>
+            ) : (
+              <>
+                {isLogin ? "AUTHENTICATE" : "CREATE PROFILE"}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
 
           {/* Toggle */}

@@ -13,8 +13,8 @@ const FloatingSymptomPanel = () => {
           <Activity className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h3 className="font-display text-sm text-primary tracking-wider">SYMPTOM INPUT</h3>
-          <p className="text-xs text-muted-foreground">Voice or text analysis</p>
+          <h3 className="font-display text-sm text-primary tracking-wider">SYMPTOM CHECK-IN</h3>
+          <p className="text-xs text-muted-foreground">Log symptoms after consultation</p>
         </div>
       </div>
 

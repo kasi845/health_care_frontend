@@ -30,10 +30,10 @@ const Index = () => {
       {/* Header */}
       <header className={`relative z-10 text-center pt-8 pb-4 px-4 transition-all duration-1000 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
         <h1 className="font-display text-2xl md:text-3xl text-primary neon-text tracking-widest">
-          AI HEALTH COMMAND CENTER
+          AI HEALTH MONITOR
         </h1>
         <p className="text-sm text-muted-foreground mt-2 tracking-wide">
-          Advanced biometric analysis system
+          Post-consultation health monitoring system
         </p>
       </header>
 

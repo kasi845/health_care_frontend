@@ -1,13 +1,33 @@
 import { Brain, AlertTriangle, TrendingUp, Scale, X } from "lucide-react";
 import { useState } from "react";
 
-const reasoningPoints = [
-  { icon: AlertTriangle, text: "High glucose detected (142 mg/dL)", severity: "high" },
-  { icon: TrendingUp, text: "Elevated blood pressure (130/85 mmHg)", severity: "medium" },
-  { icon: Scale, text: "BMI above normal range (27.3)", severity: "medium" },
+const defaultReasoningPoints = [
+  { icon: AlertTriangle, text: "Your glucose level is above normal range", severity: "high" },
+  { icon: TrendingUp, text: "Blood pressure reading indicates monitoring is required", severity: "medium" },
+  { icon: Scale, text: "BMI value suggests lifestyle adjustments may help", severity: "medium" },
 ];
 
-const AIReasoningOverlay = () => {
+const iconMap: Record<string, any> = {
+  AlertTriangle,
+  TrendingUp,
+  Scale,
+};
+
+interface AIReasoningOverlayProps {
+  healthData?: any;
+}
+
+const AIReasoningOverlay = ({ healthData }: AIReasoningOverlayProps) => {
+  const reasoningPoints = healthData?.interpretations?.map((i: any) => ({
+    icon: iconMap[i.icon] || AlertTriangle,
+    text: i.text,
+    severity: i.severity,
+  })) || [];
+  
+  // Don't show default data - only show if healthData exists
+  if (!healthData || !healthData.interpretations || healthData.interpretations.length === 0) {
+    return null;
+  }
   const [isExpanded, setIsExpanded] = useState(true);
 
   const getSeverityColor = (severity: string) => {
@@ -25,7 +45,7 @@ const AIReasoningOverlay = () => {
         className="glass-panel p-4 flex items-center gap-3 hover:glow-primary transition-all"
       >
         <Brain className="w-5 h-5 text-primary" />
-        <span className="font-display text-sm text-primary tracking-wider">VIEW AI REASONING</span>
+        <span className="font-display text-sm text-primary tracking-wider">VIEW REPORT INTERPRETATION</span>
       </button>
     );
   }
@@ -52,8 +72,8 @@ const AIReasoningOverlay = () => {
           <Brain className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h3 className="font-display text-base text-primary tracking-wider neon-text">AI REASONING</h3>
-          <p className="text-xs text-muted-foreground">Analysis factors</p>
+          <h3 className="font-display text-base text-primary tracking-wider neon-text">REPORT INTERPRETATION</h3>
+          <p className="text-xs text-muted-foreground">Based on your uploaded reports</p>
         </div>
       </div>
 
@@ -76,7 +96,7 @@ const AIReasoningOverlay = () => {
 
       {/* Footer note */}
       <p className="relative z-10 text-xs text-muted-foreground mt-5 p-3 rounded-lg bg-muted/20 border border-muted/30">
-        <span className="text-primary">◆</span> Factors weighted using established medical research algorithms
+        <span className="text-primary">◆</span> Interpretation based on uploaded medical reports and clinical references
       </p>
     </div>
   );

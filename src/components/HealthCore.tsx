@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 interface HealthCoreProps {
-  score: number;
+  score?: number;
 }
 
 const HealthCore = ({ score }: HealthCoreProps) => {
@@ -9,6 +9,12 @@ const HealthCore = ({ score }: HealthCoreProps) => {
   const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
+    if (score === undefined || score === null) {
+      setDisplayScore(0);
+      setIsAnimating(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
       setIsAnimating(false);
     }, 1000);
@@ -28,9 +34,23 @@ const HealthCore = ({ score }: HealthCoreProps) => {
     };
   }, [score]);
 
+  // Don't render if score is not provided
+  if (score === undefined || score === null) {
+    return (
+      <div className="relative flex items-center justify-center">
+        <div className="glass-panel p-8 rounded-full border border-primary/20">
+          <p className="text-muted-foreground text-sm tracking-wider text-center">
+            Upload a report to see<br />your health score
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const getScoreColor = () => {
-    if (score >= 70) return { color: "text-success", glow: "glow-success", gradient: "from-success to-accent" };
-    if (score >= 40) return { color: "text-warning", glow: "glow-warning", gradient: "from-warning to-primary" };
+    const safeScore = score ?? 0;
+    if (safeScore >= 70) return { color: "text-success", glow: "glow-success", gradient: "from-success to-accent" };
+    if (safeScore >= 40) return { color: "text-warning", glow: "glow-warning", gradient: "from-warning to-primary" };
     return { color: "text-destructive", glow: "glow-destructive", gradient: "from-destructive to-warning" };
   };
 

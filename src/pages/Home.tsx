@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -9,13 +9,46 @@ import RiskVisualization from "@/components/RiskVisualization";
 import AIReasoningOverlay from "@/components/AIReasoningOverlay";
 import RecommendationsSection from "@/components/RecommendationsSection";
 import AIOrbChat from "@/components/AIOrbChat";
+import { getHealthReport, logout as logoutUser } from "@/lib/api";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [healthScore] = useState(58);
+  const [healthScore, setHealthScore] = useState<number | null>(null);
+  const [healthData, setHealthData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load user's health data on mount
+  useEffect(() => {
+    const loadHealthData = async () => {
+      try {
+        const report = await getHealthReport();
+        if (report) {
+          // Convert backend format to frontend format
+          const formattedData = {
+            health_score: report.health_score,
+            risks: report.risks,
+            interpretations: report.interpretations,
+            suggestions: report.suggestions,
+            home_remedies: report.home_remedies,
+            medicine_categories: report.medicine_categories,
+          };
+          setHealthData(formattedData);
+          setHealthScore(report.health_score);
+        }
+        // If no report, healthScore and healthData remain null (no default data)
+      } catch (err) {
+        console.error('Failed to load health data:', err);
+        // On error, don't show default data
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadHealthData();
+  }, []);
 
   const handleLogout = () => {
-    // Clear any session data here if needed
+    logoutUser();
     navigate("/system-ready");
   };
 
@@ -75,28 +108,33 @@ const Home = () => {
 
           {/* Center - Health Core */}
           <div className="lg:order-2 order-1 flex items-center justify-center py-8 lg:py-0">
-            <HealthCore score={healthScore} />
+            <HealthCore score={healthScore ?? undefined} />
           </div>
 
           {/* Right panel - Upload */}
           <div className="lg:order-3 order-3">
-            <FloatingUploadPanel />
+            <FloatingUploadPanel 
+              onAnalysisComplete={(data) => {
+                setHealthData(data);
+                setHealthScore(data.health_score);
+              }}
+            />
           </div>
         </div>
 
         {/* Risk Analysis */}
         <div className="w-full max-w-4xl mb-10">
-          <RiskVisualization />
+          <RiskVisualization healthData={healthData} />
         </div>
 
         {/* AI Reasoning */}
         <div className="w-full max-w-2xl mb-10">
-          <AIReasoningOverlay />
+          <AIReasoningOverlay healthData={healthData} />
         </div>
 
         {/* Recommendations */}
         <div className="w-full max-w-2xl mb-20">
-          <RecommendationsSection />
+          <RecommendationsSection healthData={healthData} />
         </div>
       </div>
 

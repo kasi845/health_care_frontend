@@ -9,9 +9,9 @@ const CyberFooter = () => {
           <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
           <p className="text-sm text-muted-foreground">
             <span className="text-warning font-medium">SYSTEM NOTICE:</span>{" "}
-            This is an early risk screening tool designed for preliminary health assessment. 
-            It does <span className="text-foreground">not</span> constitute a medical diagnosis. 
-            Consult healthcare professionals for medical advice.
+            This system supports post-consultation monitoring and guidance. 
+            It does <span className="text-foreground">not</span> replace a medical professional. 
+            Always consult your doctor for medical advice.
           </p>
         </div>
 
@@ -19,7 +19,7 @@ const CyberFooter = () => {
         <div className="flex items-center justify-center gap-4 mt-6">
           <div className="h-px flex-1 max-w-24 bg-gradient-to-r from-transparent to-primary/30" />
           <p className="font-display text-xs text-muted-foreground tracking-widest">
-            AI HEALTH COMMAND CENTER v2.0
+            AI HEALTH MONITOR v2.0
           </p>
           <div className="h-px flex-1 max-w-24 bg-gradient-to-l from-transparent to-primary/30" />
         </div>

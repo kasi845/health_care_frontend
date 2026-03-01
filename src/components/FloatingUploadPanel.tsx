@@ -1,10 +1,40 @@
-import { useState, useCallback } from "react";
-import { Upload, FileText, Check, Scan } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Upload, FileText, Check, Scan, X } from "lucide-react";
+import { analyzeHealthReport, uploadPDF } from "@/lib/api";
 
-const FloatingUploadPanel = () => {
+interface FloatingUploadPanelProps {
+  onAnalysisComplete?: (data: any) => void;
+}
+
+const FloatingUploadPanel = ({ onAnalysisComplete }: FloatingUploadPanelProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [parametersCount, setParametersCount] = useState(0);
+  const [anomaliesCount, setAnomaliesCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Reset after successful upload (auto-reset after 5 seconds)
+  useEffect(() => {
+    if (isComplete && !isProcessing) {
+      const timer = setTimeout(() => {
+        handleReset();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isComplete, isProcessing]);
+  
+  const handleReset = () => {
+    setIsComplete(false);
+    setIsProcessing(false);
+    setError(null);
+    setParametersCount(0);
+    setAnomaliesCount(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -16,22 +46,70 @@ const FloatingUploadPanel = () => {
     setIsDragging(false);
   }, []);
 
-  const simulateUpload = () => {
+  const processFile = async (file: File) => {
+    // Validate file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    const isValidType = validTypes.includes(file.type) || 
+                       file.name.toLowerCase().endsWith('.pdf') ||
+                       file.name.toLowerCase().endsWith('.jpg') ||
+                       file.name.toLowerCase().endsWith('.jpeg') ||
+                       file.name.toLowerCase().endsWith('.png');
+    
+    if (!isValidType) {
+      setError('Please upload a PDF or image file (PDF, JPG, PNG)');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    setError(null);
+    setIsComplete(false);
+
+    try {
+      // Analyze and save to database (analyzeHealthReport now saves automatically)
+      const analysis = await analyzeHealthReport(file);
+      
+      // Calculate parameters and anomalies
+      const params = analysis.risks.length + analysis.interpretations.length;
+      const anomalies = analysis.interpretations.filter((i: any) => i.severity === 'high' || i.severity === 'medium').length;
+      
+      setParametersCount(params);
+      setAnomaliesCount(anomalies);
       setIsComplete(true);
-    }, 2000);
+      
+      // Notify parent component
+      if (onAnalysisComplete) {
+        onAnalysisComplete(analysis);
+      }
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err?.message || 'Failed to process file');
+      setIsComplete(false);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    simulateUpload();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      processFile(file);
+    }
   }, []);
 
-  const handleFileInput = () => {
-    simulateUpload();
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   return (
@@ -42,8 +120,8 @@ const FloatingUploadPanel = () => {
           <FileText className="w-5 h-5 text-accent" />
         </div>
         <div>
-          <h3 className="font-display text-sm text-accent tracking-wider">UPLOAD REPORTS</h3>
-          <p className="text-xs text-muted-foreground">Medical data extraction</p>
+          <h3 className="font-display text-sm text-accent tracking-wider">UPLOAD DOCTOR REPORTS</h3>
+          <p className="text-xs text-muted-foreground">Lab reports & prescriptions</p>
         </div>
       </div>
 
@@ -61,9 +139,10 @@ const FloatingUploadPanel = () => {
         }`}
       >
         <input
+          ref={fileInputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.jpg,.jpeg,.png"
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
           onChange={handleFileInput}
         />
 
@@ -86,6 +165,15 @@ const FloatingUploadPanel = () => {
               <Check className="w-6 h-6 text-success" />
             </div>
             <p className="font-display text-xs text-success mt-3 tracking-widest">DATA EXTRACTED</p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleReset();
+              }}
+              className="mt-2 px-3 py-1 text-xs text-success/80 hover:text-success border border-success/30 rounded hover:bg-success/10 transition-colors"
+            >
+              Upload New File
+            </button>
           </>
         )}
 
@@ -109,15 +197,22 @@ const FloatingUploadPanel = () => {
         )}
       </label>
 
+      {/* Error message */}
+      {error && (
+        <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+          <p className="text-xs text-destructive">{error}</p>
+        </div>
+      )}
+
       {/* Quick stats when complete */}
       {isComplete && (
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="p-3 rounded-lg bg-muted/20 border border-primary/20 text-center">
-            <p className="font-display text-lg text-primary">3</p>
+            <p className="font-display text-lg text-primary">{parametersCount}</p>
             <p className="text-xs text-muted-foreground">Parameters</p>
           </div>
           <div className="p-3 rounded-lg bg-muted/20 border border-accent/20 text-center">
-            <p className="font-display text-lg text-accent">2</p>
+            <p className="font-display text-lg text-accent">{anomaliesCount}</p>
             <p className="text-xs text-muted-foreground">Anomalies</p>
           </div>
         </div>
