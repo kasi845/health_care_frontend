@@ -6,7 +6,6 @@ import FloatingSymptomPanel from "@/components/FloatingSymptomPanel";
 import FloatingUploadPanel from "@/components/FloatingUploadPanel";
 import RiskVisualization from "@/components/RiskVisualization";
 import AIReasoningOverlay from "@/components/AIReasoningOverlay";
-import AIOrbChat from "@/components/AIOrbChat";
 import CyberFooter from "@/components/CyberFooter";
 
 const Index = () => {
@@ -68,7 +67,6 @@ const Index = () => {
       </main>
 
       <CyberFooter />
-      <AIOrbChat />
     </div>
   );
 };

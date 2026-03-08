@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, ArrowRight, Fingerprint, Phone, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Fingerprint, Loader2, AlertCircle } from "lucide-react";
 import { signup, login } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,7 +14,6 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,6 +44,7 @@ const Auth = () => {
           title: "Login successful",
           description: "Welcome back!",
         });
+        navigate("/home");
       } else {
         // Signup
         if (!email || !password || !name) {
@@ -57,20 +57,13 @@ const Auth = () => {
           setLoading(false);
           return;
         }
-        await signup({ 
-          email, 
-          password, 
-          full_name: name,
-          phone: phone || undefined 
-        });
+        await signup({ name, email, password });
         toast({
           title: "Account created",
-          description: "Welcome! Your account has been created successfully.",
+          description: "Tell us about your previous health history so we can personalize your experience.",
         });
+        navigate("/health-history");
       }
-      
-      // Navigate to home after successful auth
-      navigate("/home");
     } catch (err: any) {
       setError(err.message || "An error occurred. Please try again.");
       toast({
@@ -126,7 +119,7 @@ const Auth = () => {
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60" />
               <Input
                 type="text"
-                placeholder="Full Name"
+                placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={!isLogin}
@@ -148,20 +141,6 @@ const Auth = () => {
               className="pl-12 h-12 bg-muted/30 border-primary/20 focus:border-primary/50 rounded-xl font-display tracking-wider text-foreground placeholder:text-muted-foreground"
             />
           </div>
-
-          {!isLogin && (
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60" />
-              <Input
-                type="tel"
-                placeholder="Phone Number (Optional)"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={loading}
-                className="pl-12 h-12 bg-muted/30 border-primary/20 focus:border-primary/50 rounded-xl font-display tracking-wider text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          )}
 
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60" />

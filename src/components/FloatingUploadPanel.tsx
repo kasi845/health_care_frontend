@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Upload, FileText, Check, Scan, X } from "lucide-react";
-import { analyzeHealthReport, uploadPDF } from "@/lib/api";
+import { analyzeHealthReport } from "@/lib/api";
+
+// Upload Doctor Reports (PDF, JPG, PNG) → POST /extract/ when not logged in, or POST /reports/upload-analyze when logged in
 
 interface FloatingUploadPanelProps {
   onAnalysisComplete?: (data: any) => void;
@@ -200,7 +202,7 @@ const FloatingUploadPanel = ({ onAnalysisComplete }: FloatingUploadPanelProps) =
       {/* Error message */}
       {error && (
         <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-          <p className="text-xs text-destructive">{error}</p>
+          <p className="text-xs text-destructive break-words whitespace-pre-wrap">{error}</p>
         </div>
       )}
 

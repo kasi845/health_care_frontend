@@ -69,10 +69,9 @@ const RecommendationsSection = ({ healthData }: RecommendationsSectionProps) => 
   
   const suggestions = healthData.suggestions || [];
   const homeRemedies = healthData.home_remedies || [];
-  const medicineCategories = healthData.medicine_categories || [];
   
   // Don't render if all sections are empty
-  if (suggestions.length === 0 && homeRemedies.length === 0 && medicineCategories.length === 0) {
+  if (suggestions.length === 0 && homeRemedies.length === 0) {
     return null;
   }
 
@@ -124,30 +123,8 @@ const RecommendationsSection = ({ healthData }: RecommendationsSectionProps) => 
           </ul>
         </RecommendationPanel>
 
-        <RecommendationPanel 
-          title="PRIMARY MEDICINE CATEGORIES (ADVISORY)" 
-          icon={<Pill className="w-5 h-5 text-primary" />}
-        >
-          <div className="space-y-3">
-            {medicineCategories.map((item: any, index: number) => (
-              <div 
-                key={index}
-                className="p-3 rounded-lg bg-muted/20 border border-primary/10"
-              >
-                <span className="text-sm text-foreground font-medium">{item.category}</span>
-                <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-              </div>
-            ))}
-            
-            {/* Warning */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 mt-4">
-              <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-              <p className="text-xs text-warning/80">
-                Always follow your doctor's prescription. These are general medicine categories for informational purposes only.
-              </p>
-            </div>
-          </div>
-        </RecommendationPanel>
+        {/* Primary medicine categories panel was removed from UI as requested.
+            If needed in future, it can be re-enabled here. */}
       </div>
     </div>
   );

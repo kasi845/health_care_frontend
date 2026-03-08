@@ -21,10 +21,12 @@ const HealthCore = ({ score }: HealthCoreProps) => {
 
     const scoreInterval = setInterval(() => {
       setDisplayScore((prev) => {
+        if (prev === score) return prev;
         if (prev < score) {
           return Math.min(prev + 1, score);
         }
-        return prev;
+        // Animate downwards when score decreases
+        return Math.max(prev - 1, score);
       });
     }, 30);
 
@@ -141,9 +143,6 @@ const HealthCore = ({ score }: HealthCoreProps) => {
           </span>
         </div>
       </div>
-
-      {/* Pulsing core */}
-      <div className="absolute w-4 h-4 rounded-full bg-primary animate-glow-pulse glow-primary" />
     </div>
   );
 };
